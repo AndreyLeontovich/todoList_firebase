@@ -1,26 +1,15 @@
 import { NavLink, useNavigate } from "react-router";
 import { useState} from "react";
-import { useUser } from "../../context/userContext"; 
-
 import { loginAPI } from "../../fireBase/auth";
-import { getUserAPI } from "../../fireBase/userAPI";
-import { getTodoListAPI } from "../../fireBase/userAPI";
-
-
-import styles from "./../login/Login.module.scss";
-import React from "react";
-
 import { Input } from "../../utils/input/Input";
 
+import styles from "./../login/Login.module.scss";
+
+
 export const Login = () => {
-
-  const {loginUserAuth} = useUser()
-
 const [email, setEmail] = useState('')
 const [password, setPassword] = useState('')
 const [remember, setRemember] = useState(!false)
-
-const navigate = useNavigate()
 
 
 const login = async () => {
@@ -35,32 +24,6 @@ const login = async () => {
       console.log('Login Error', response.text);
       return
     }
-
-    const uid = response.data.user.uid
-
-    const responseTwo = await getUserAPI(uid)
-    if (!responseTwo.ok) {
-      console.log('Login Error', response.text);
-      return
-    }
-
-    const responseThree = await getTodoListAPI(uid);
-    if (!responseThree.ok) {
-      console.log("TodoList Error:", responseThree.text);
-      return;
-    }
-    
-    const userDatas = {
-      name: responseTwo.data.name,
-      email:  responseTwo.data.email
-    }
-    
-    const userTodoList = responseThree.data.todoList
-
-
-    loginUserAuth(userDatas, userTodoList)
-    console.log('Account created success!', responseTwo.data);
-    navigate('/home')
 }
 
 

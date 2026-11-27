@@ -1,52 +1,62 @@
 import React from "react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useUser } from "../../context/userContext";
 import styles from "./../home/Home.module.scss";
 import { Input } from "../../utils/input/Input"; 
-import { updateTodoListAPI } from "../../fireBase/userAPI";
+import { deleteTodoAPI, updateTodoListAPI, getTodoListAPI } from "../../fireBase/userAPI";
 import { loginOut } from "../../fireBase/auth";
+import { createNewTodoListAPI } from "../../fireBase/userAPI";
+
+import { ContModal } from "../../utils/contModal/ContModal";
+import { EditModal } from "../../utils/editModal/EditModal";
 
 
 export const Home = () => {
-  const { user, todo, updateUserTodoList } = useUser();
+  const { user, todo, updateUserTodoList, updateOneTodoList } = useUser();
   const [text, setText] = useState('')
+  const [search, setSearch] = useState('')
   const [filter, setFilter] = useState("all");
 
-
-  const saveTodoList = async (newTodoList) => {
-    const response = await updateTodoListAPI(newTodoList)
-
-    if (!response.ok) {
-      console.log("Firestore Error:", response.text);
-      return;
-    }
-    
-    updateUserTodoList(response.data);
-  }
+  const [isContModal, setIsContModal] = useState({
+    id: null,
+    clientX: null,
+    clientY: null,
+    is:false
+  })
+  const [isEditModal, setIsEditModal] = useState(false)
 
 
-  const addTodo = async  () => {
+
+  const addTodo = async () => {
     if (!text.trim()) return;
-    
+    const isExist = todo.some(item => item.text == text)
+    if (isExist) return console.log('already exist');
+
     const newTodo = {
-      id: Date.now(),
       text: text,
       isComplete: false,
     }
+    const newTodoID = Date.now().toString()
 
-    const newTodoList = [...todo, newTodo]
-    
+    const responseCreateTodo = await createNewTodoListAPI(user.uid, newTodoID, newTodo)
+    console.log(responseCreateTodo.data);
 
-    await saveTodoList(newTodoList)
-    setText("");
+    const responseTodoList = await getTodoListAPI(user.uid) 
+    console.log(responseTodoList.data);
+    updateUserTodoList(responseTodoList.data)
   }
 
   const deleteTodo = async (id) => {
-    const newTodoList = todo.filter(item => item.id !== id )
 
- 
-    await saveTodoList(newTodoList)
+    const response = await deleteTodoAPI(id);
+    if (response.ok) {
+    const newTodoList = todo.filter(item => item.id !== id )
+    updateUserTodoList(newTodoList)
+    } else {
+      console.log(response.text);
+    }
   }
+
 
   const isFinished = async (id) => {
     const newTodoList = todo.map((item) => {
@@ -56,32 +66,57 @@ export const Home = () => {
           isComplete: !item.isComplete
         };
       }
-  
       return item;
     });
-    
- 
-    await saveTodoList(newTodoList);
+
+    const updatedTodo = newTodoList.find(item => item.id === id);
+
+  if (!updatedTodo) return;
+
+  const response = await updateTodoListAPI(id, {
+    isComplete: updatedTodo.isComplete
+  });
+  if (response.ok) {
+    updateUserTodoList(newTodoList);
+  } else {
+    console.log(response.text);
+  }
     
   }
 
 
   const clearCompletedTodo = async () => {
-    const newTodoList = todo.filter(item => !item.isComplete )
-    await saveTodoList(newTodoList)
+    const notCompletedTodoList = todo.filter(item => !item.isComplete )
+    const newTodoList = todo.filter(item => item.isComplete )
+    newTodoList.map(item => {
+      deleteTodoAPI(item.id);
+    })
+    updateUserTodoList(notCompletedTodoList);
   }
 
   const filteredTodoList = todo.filter((item) => {
-    if (filter === "active") {
-      return !item.isComplete;
+
+    if(!item.text.includes(search)){
+      return false;
     }
-  
-    if (filter === "completed") {
-      return item.isComplete;
-    }
+      if (filter === "active") {
+        return !item.isComplete;
+      }
+    
+      if (filter === "completed") {
+        return item.isComplete;
+      }
+
+    
   
     return true;
   });
+
+  const searching = (e) => {
+    setSearch(e.target.value)
+    // const searchingTodos = todo.filter(item => item.text.includes(searchText))
+    // console.log(searchingTodos.length);
+  } 
 
 
   const totalTasks = todo.length;
@@ -102,6 +137,49 @@ export const Home = () => {
           console.log("Ошибка выхода:", error);
       }
   };
+
+
+  const onContMenu = (e, id, text) => {
+    e.preventDefault()
+    console.log(id);
+
+    setIsContModal({
+      text,
+      id,
+      clientX: e.clientX,
+      clientY: e.clientY,
+      is: true
+    })
+  }
+
+  const onEdit = () => {
+    setIsContModal({
+      ...isContModal,
+      clientX: null,
+      clientY: null,
+      is: false
+    })
+
+    setIsEditModal(true)
+  }
+
+  const onConfirm =  async  (newValue) => {
+    const editElem = todo.find(item => item.id === isContModal.id)
+    editElem.text = newValue
+    console.log(editElem);
+    const response = await updateTodoListAPI(editElem.id, editElem)
+    
+    if (response.ok) {
+      updateUserTodoList([...todo])
+      setIsEditModal(false)  
+    } else {
+      console.log(response.text);
+    }
+
+  }
+
+  
+
 
 
   return (
@@ -164,13 +242,21 @@ export const Home = () => {
               onClick={() => setFilter("completed")}
               className={filter === "completed" ? styles.active : ""}
               >Completed</button>
-          </div>
+
+              <input
+                value={search}
+                onChange={searching}
+                type="text"
+                placeholder="Search todo"
+              />
+            </div>
+          
 
 
 
           {filteredTodoList.map(item => {
             return(
-              <div  key={item.id} className={styles.taskList}>
+              <div onContextMenu={(e) => onContMenu(e, item.id, item.text)} key={item.id} className={styles.taskList}>
                 <div className={styles.task}>
                   <div className={styles.taskContent}>
                   <input
@@ -200,6 +286,28 @@ export const Home = () => {
           </footer>
         </div>
       </section>
+
+
+    
+      {isContModal.is && 
+          <ContModal
+            clientX={isContModal.clientX}
+            clientY={isContModal.clientY}
+            onEdit={onEdit}
+          />
+
+      }
+
+      {isEditModal && 
+        <EditModal
+          onCancel={() => setIsEditModal(false)}
+          onConfirm={onConfirm}
+          oldValue={isContModal.text}
+        />
+        
+      }
+      
+
     </>
   );
 };

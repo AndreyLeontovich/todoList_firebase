@@ -1,8 +1,13 @@
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, setPersistence, browserLocalPersistence, onAuthStateChanged, getAuth } from "firebase/auth";
+import { 
+    createUserWithEmailAndPassword, 
+    signInWithEmailAndPassword, 
+    signOut, setPersistence, 
+    browserLocalPersistence, 
+    onAuthStateChanged, 
+    getAuth 
+} from "firebase/auth";
 
 import { AUTH } from "./fireBase";
-
-
 
 export const registrationAPI = async (email, password) => {
     try {
@@ -13,7 +18,6 @@ export const registrationAPI = async (email, password) => {
         return {ok: false, text: error.message} 
     }
 }
-
 
 export const loginAPI = async (user) => {
     try {
@@ -28,15 +32,7 @@ export const loginAPI = async (user) => {
 
 export const loginOut = () => signOut(AUTH)
 
-
-
-
-
-
-
-
-
-
 export const checkAuthAPI = (callback) => {
     return onAuthStateChanged(AUTH, callback);
 };
+

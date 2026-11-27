@@ -1,0 +1,132 @@
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    inset: 0;
+    z-index: 1000;
+  
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(4px);
+    padding: 20px;
+  }
+  
+  .modal {
+    width: 100%;
+    max-width: 420px;
+    box-sizing: border-box;
+  
+    padding: 25px;
+    background: #ffffff;
+    border-radius: 16px;
+    color: #1f2937;
+  
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+  
+    animation: modalOpen 0.2s ease;
+  
+    p {
+      color: #6b7280;
+      font-size: 14px;
+      margin: 12px 0 20px;
+    }
+  
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px 14px;
+  
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      background: #ffffff;
+      color: #1f2937;
+  
+      font-size: 16px;
+      outline: none;
+  
+      &:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
+    }
+  }
+  
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  
+    h2 {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 600;
+    }
+  }
+  
+  .closeButton {
+    background: transparent;
+    border: none;
+    font-size: 26px;
+    color: #6b7280;
+    cursor: pointer;
+  
+    &:hover {
+      color: #ef4444;
+    }
+  }
+  
+  .buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+  
+    button {
+      flex: 1;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+  }
+  
+  .cancelButton {
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    color: #374151;
+  
+    &:hover {
+      background: #f3f4f6;
+    }
+  }
+  
+  .confirmButton {
+    background: #3b82f6;
+    border: 1px solid transparent;
+    color: #ffffff;
+  
+    &:hover {
+      background: #2563eb;
+    }
+  
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+  
+  @keyframes modalOpen {
+    from {
+      opacity: 0;
+      transform: translateY(10px) scale(0.97);
+    }
+  
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }

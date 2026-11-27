@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { checkAuthAPI } from "../fireBase/auth";
-
 import { getUserAPI, getTodoListAPI } from "../fireBase/userAPI";
 
 export const UserContext = createContext();
@@ -13,31 +12,26 @@ export function useUserState() {
   const isAuth = !!user;
 
   useEffect(() => {
-    let active = true;
-    let requestId = 0;
-
-    const unsubscribe = checkAuthAPI(async (firebaseUser) => {
-      const currentRequest = ++requestId;
+   checkAuthAPI(async (firebaseUser) => {
 
       setLoading(true);
 
       try {
         if (firebaseUser) {
           const uid = firebaseUser.uid;
-
           const response = await getUserAPI(uid);
           const responseTwo = await getTodoListAPI(uid);
-
-          if (!active || currentRequest !== requestId) return;
+        
+          console.log(response.data);
+          console.log(responseTwo.data);
 
           if (response.ok && responseTwo.ok) {
-            loginUserAuth(
-              {
+            setUser({
                 name: response.data.name,
                 email: response.data.email,
-              },
-              responseTwo.data?.todoList ?? []
-            );
+                uid
+              });
+            setTodo(responseTwo.data ?? [])
           } else {
             console.log("Ошибка загрузки данных");
           }
@@ -46,21 +40,11 @@ export function useUserState() {
           setTodo([]);
         }
       } catch (error) {
-        if (active && currentRequest === requestId) {
           console.log("Ошибка:", error);
-        }
-      } finally {
-        if (active && currentRequest === requestId) {
-          setLoading(false);
-        }
-      }
-    });
+      } 
 
-    return () => {
-      active = false;
-      requestId++;
-      unsubscribe();
-    };
+      setLoading(false);
+    });
   }, []);
 
   //? Регистрация и авторизация
@@ -69,16 +53,13 @@ export function useUserState() {
     setUser(user);
     setTodo(todo);
   };
-  const loginUserAuth = (user, todo) => {
-    setTodo(todo);
-    setUser(user);
-  };
 
   //? Обновление TodoList
 
   const updateUserTodoList = (todoList) => {
     setTodo([...todoList]);
   };
+  
 
   return {
     user,
@@ -86,7 +67,6 @@ export function useUserState() {
     todo,
     isAuth,
     registerUserAuth,
-    loginUserAuth,
     updateUserTodoList,
   };
 }

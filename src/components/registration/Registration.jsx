@@ -1,20 +1,16 @@
 import React from "react";
 import { useState } from "react";
-import { NavLink, useNavigate } from "react-router";
+import { NavLink } from "react-router";
 
-import { useUser } from "../../context/userContext";
 
 import { registrationAPI } from "../../fireBase/auth";
-import { createUserAPI, createTodoListAPI } from "../../fireBase/userAPI";
+import { createUserAPI } from "../../fireBase/userAPI";
 
 import styles from "./../registration/Registration.module.scss";
 
 import { Input } from "../../utils/input/Input";
 
 export const Registration = () => {
-
-  const { registerUserAuth } = useUser()
-  const navigate = useNavigate()
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -56,6 +52,8 @@ export const Registration = () => {
       return
     }
 
+
+   
 //! 2. Формируем данные пользователя ==========================================================================
 
 
@@ -69,29 +67,16 @@ export const Registration = () => {
 
 
     const responseTwo = await createUserAPI(newUser)
-    const responseThree = await createTodoListAPI(newUser)
+    // const responseThree = await createNewTodoListAPI(newUser.uid, )
     if (!responseTwo.ok) {
       console.log(responseTwo.text);
       return
     }
 
-    if (!responseThree.ok) {
-      console.log(responseThree.text);
-      return
-    }
-
-    const userData = {
-      name: responseTwo.data.name,
-      email: responseTwo.data.email
-    }
-
-    const userTodo = responseThree.data.todoList
-    
-    
-    registerUserAuth(userData, userTodo)
-
-    navigate('/home')
-    console.log("Account created success!");
+    // if (!responseThree.ok) {
+    //   console.log(responseThree.text);
+    //   return
+    // }
   };
 
   return (

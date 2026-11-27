@@ -13,6 +13,7 @@ export const Input = ({
   required
 }) => {
   const change = (e) => {
+    console.log(e.target.value);
     setValue(e.target.value)
 };
 
